@@ -1,0 +1,74 @@
+%% data Preparation for simulation
+t_imu_dvl=Acceleration.timestamp (1,1)-GroundVelocity.timestamp(1,1);
+t_imu_gps=Acceleration.timestamp (1,1)-GpsFix.timestamp(2,1);
+t_imu_depth=Acceleration.timestamp (1,1)-Depth.timestamp(1,1);
+t_imu_heading=Acceleration.timestamp (1,1)-SimulatedState.timestamp(1,1);
+
+Real_Measurement.IMU(:,1)=(floor(Acceleration.timestamp*10000))/10000 -floor(Acceleration.timestamp (1,1));
+Real_Measurement.IMU(:,2:4)=[Acceleration.x Acceleration.y Acceleration.z];
+Real_Measurement.IMU(:,5:7)=[AngularVelocity.x AngularVelocity.y AngularVelocity.z];
+
+Real_Measurement.GPS(:,1)=(floor(GpsFix.timestamp(2:end,1)*100))/100-floor(Acceleration.timestamp (1,1));
+Real_Measurement.GPS(:,2:4)=[GpsFix.lat(2:end,1) GpsFix.lon(2:end,1) GpsFix.height(2:end,1)]*180/pi;
+
+Real_Measurement.DVL(:,1)=(floor(GroundVelocity.timestamp*100))/100-floor(Acceleration.timestamp (1,1));
+Real_Measurement.DVL(:,2:4)=[GroundVelocity.x GroundVelocity.y GroundVelocity.z];
+
+Real_Measurement.Heading(:,1)=Real_Measurement.IMU(:,1);
+Real_Measurement.Heading(:,2)=SimulatedState.psi*180/pi;%%SimulatedData
+
+Real_Measurement.Heading(:,1)=(floor(EulerAngles.timestamp(1:end,1)*100))/100-floor(Acceleration.timestamp (1,1));%%RealData
+Real_Measurement.Heading(:,2)=EulerAngles.psi*180/pi; %%% RealData
+
+Real_Measurement.Depth(:,1)=(floor(Depth.timestamp*100))/100-floor(Acceleration.timestamp (1,1));
+Real_Measurement.Depth(:,2)=Depth.value;
+
+Real_Measurement.RollPitch(:,1)=Real_Measurement.IMU(:,1);
+Real_Measurement.RollPitch(:,2)=SimulatedState.phi*180/pi;
+ Real_Measurement.RollPitch(:,3)=SimulatedState.theta*180/pi;
+
+Real_Measurement.Ref_Pos(:,1)=Real_Measurement.IMU(:,1);
+Real_Measurement.Ref_Pos(:,2)=SimulatedState.x;
+Real_Measurement.Ref_Pos(:,3)=SimulatedState.y;
+Real_Measurement.Ref_Pos(:,4)=0;
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+j=1;
+for i=1:length(v(:,1))
+if v(i,2)~=0
+Vel(j,:)=[v(i,1) v(i,2) v(i,3) v(i,4)];
+j=j+1;
+end
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+j=1;
+for k=2:length(Acceleration.timestamp)
+if Acceleration.timestamp(k,1)>Acceleration.timestamp(k-1,1)
+IMU(j,1)=Acceleration.timestamp(k,1);
+IMU(j,2)=Acceleration.x(k,1);
+IMU(j,3)=Acceleration.y(k,1);
+IMU(j,4)=Acceleration.z(k,1);
+IMU(j,5)=AngularVelocity.x(k,1);
+IMU(j,6)=AngularVelocity.y(k,1);
+IMU(j,7)=AngularVelocity.z(k,1);
+j=j+1;
+end
+end
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+for i=1:3
+figure;plot(Real_Measurement.Ref_Pos(:,i+1))
+hold on;plot(Simulation1.Output.ESKF.Pos_m(:,i),'r')
+end
+
+figure;plot(Real_Measurement.Ref_Pos(:,3),Real_Measurement.Ref_Pos(:,2))
+hold on;plot(Simulation1.Output.ESKF.Pos_m(:,2),Simulation1.Output.ESKF.Pos_m(:,1),'r')
+
+figure;plot(Simulation1.Input.Measurements.Heading(:,end))
+figure;plot(Simulation1.Output.ESKF.O_corrected(:,9)*180/pi)
+
+figure;plot(Real_Measurement.Ref_Pos(:,3),Real_Measurement.Ref_Pos(:,2))
+
+
+Simulation.Parameters_IMUNoisePSD_Nav.PSD_ax, Simulation.Parameters_IMUNoisePSD_Nav.PSD_ay, Simulation.Parameters_IMUNoisePSD_Nav.PSD_az, Simulation.Parameters_IMUNoisePSD_Nav.PSD_wx, Simulation.Parameters_IMUNoisePSD_Nav.PSD_wy, Simulation.Parameters_IMUNoisePSD_Nav.PSD_wz, Simulation.Parameters_IMUNoisePSD_Nav.PSD_Bax, Simulation.Parameters_IMUNoisePSD_Nav.PSD_Bay, Simulation.Parameters_IMUNoisePSD_Nav.PSD_Baz, Simulation.Parameters_IMUNoisePSD_Nav.PSD_Bwx, Simulation.Parameters_IMUNoisePSD_Nav.PSD_Bwy, Simulation.Parameters_IMUNoisePSD_Nav.PSD_Bwz
